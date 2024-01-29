@@ -1,0 +1,40 @@
+---
+title: "Data 607 Assignment 1"
+author: "Lu Beyer"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+# Introduction
+
+https://fivethirtyeight.com/features/aging-congress-boomers/
+
+The median age of congress is at a record high and is trending to continue to increase.  This is important to note as technology rapidly advances and there are concerns that congress members may be unable to keep up with modern technolgy.
+
+
+```{r}
+library(tidyverse)
+data <- read.csv("C:/Users/Lu/Documents/School/DATA607/Assignment1/congress-demographics/data_aging_congress.csv")
+```
+```{r}
+x <- data %>% 
+  select(start_date, chamber, state_abbrev, birthday, age_days, age_years)
+```
+```{r}
+x <- x %>%
+  group_by(year = year(start_date)) %>%
+  summarize(median_age_years = median(age_years, na.rm = TRUE))
+```
+
+```{r}
+ggplot(data=x, aes(x = year, y = median_age_years)) +
+  geom_line() +
+  geom_smooth(method = "lm")
+```
+
+# Conclusion
+
+I grouped by year to find the median age in years and plotted the data to confirm visually and added a regression line to help show the trend. 
+
+
