@@ -1,0 +1,17 @@
+<books>
+  <book>
+    <Series>Nana</Series>
+    <Volume>1</Volume>
+    <Author>Ai Yazawa</Author>
+  </book>
+  <book>
+    <Series>Death Note</Series>
+    <Volume>3</Volume>
+    <Author>Tsugumi Ohba and Takeshi Obata</Author>
+  </book>
+  <book>
+    <Series>Sailor Moon</Series>
+    <Volume>1</Volume>
+    <Author>Naoko Takeuchi</Author>
+  </book>
+</books>

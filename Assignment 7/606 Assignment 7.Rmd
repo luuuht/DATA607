@@ -1,0 +1,46 @@
+---
+title: "607 Assignment 7"
+author: "Lu Beyer"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r}
+library(tidyverse)
+library(rvest)
+library(XML)
+library(jsonlite)
+```
+
+
+# Overview
+I want to read the same data in three different file formats: HTML, XML, and JSON.  Hopefully this will give me a better idea of which formats are best or easiest to use in R for webscraping/APIs.
+
+```{r}
+html <-  read_html('books.html')
+
+html_df <- html %>% 
+  html_node("table") %>% 
+  html_table()
+
+html_df
+```
+
+
+```{r}
+json_df <- fromJSON("books.JSON")
+json_df
+```
+
+
+
+```{r}
+xml_data <- xmlParse("books.xml")
+xml_df <- xmlToDataFrame(xml_data)
+xml_df
+```
+
+
+# Conclusion
+With the same information across three different file formats, each was read and loaded into R differently.  While HTML and XML files appear very similar, they read numbers differently, with HTML being read numerically, and XML being read as character. JSON has the most confusing structure to read, but took the least amount of steps to read and present.  HTML and XML are very intuitive for how they're formatted, lending to easier visual parsing.
