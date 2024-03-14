@@ -1,0 +1,52 @@
+---
+title: "Tidyverse Create - Dplyr"
+author: "Lu Beyer"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+# Overview
+The dataset I chose is looking at 2022 Republican candidates who denied the 2020 Presidential election results. The Tidyverse package I chose to organize this data is Dplyr, which is my favorite package for cleaning and manipulating data.
+
+```{r}
+library(tidyselect)
+library(dplyr)
+data <- read.csv("fivethirtyeight_election_deniers.csv")
+```
+
+First we can use the select function within a Tidyverse pipe to easily narrow down the columns we would like to use. I like to do manipulation into a new variable to easily compare against the original, and for easier troubleshooting when issue arise.
+
+We can select in two different ways.  First we can select by explicitly stating the columns we want.
+```{r}
+a <- data %>% 
+  select(Candidate, Incumbent, State, Office, Stance, Source)
+
+a %>% head(5)
+```
+
+We can also use select to remove columns from our dataframe, and preserve the others.
+```{r}
+a <- a %>% 
+  select(-Source)
+a %>% head(5)
+```
+
+We can use mutate to conditionally modify existing columns. We can also use mutate to conditionally create new columns as well.  
+Here I will use grepl to search for specific stances to combine into more broad categories.
+
+```{r}
+b <- a %>% 
+  mutate(Stance = ifelse(grepl("accept", Stance, ignore.case = TRUE), "Accept", Stance),
+         Stance = ifelse(grepl("denied", Stance, ignore.case = TRUE), "Deny", Stance),
+         Stance = ifelse(grepl("avoid|no comment|question", Stance, ignore.case = TRUE), "Neither", Stance))
+
+b %>% head(5)
+```
+
+
+# Conclusion
+
+Dplyr is an extremely versatile and useful tool in data cleaning.  It easily allows you to transform data into usable data, while maintaining human legibility. Mutate specifically is one of my favorite functions, because it allows you to have a lot of control over how the data looks, and helps you steer the data into how you want to display it for future visualization.
+
+
