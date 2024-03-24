@@ -1,0 +1,299 @@
+---
+title: "Data 606 Lab 7"
+author: "Lu Beyer"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+library(tidyverse)
+library(openintro)
+library(infer)
+library(DATA606)
+set.seed(777)
+```
+
+```{r}
+data <- data('yrbss', package ='openintro')
+```
+
+```{r}
+?yrbss
+```
+Exercise 1
+What are the cases in this data set? How many cases are there in our sample?
+
+```{r}
+glimpse(yrbss)
+```
+There are 13,583 rows/cases in this dataset
+
+```{r}
+summary(yrbss$weight)
+```
+
+Exercise 2
+How many observations are we missing weights from?
+
+We're missing 1004 observations for weight. 
+
+```{r}
+x <- yrbss %>% 
+  mutate(physical_3plus = ifelse(yrbss$physically_active_7d > 2, "yes", "no"))
+```
+
+Exercise 3
+Make a side-by-side boxplot of physical_3plus and weight. Is there a relationship between these two variables? What did you expect and why?
+
+```{r}
+ggplot(x, aes(x=weight, y=physical_3plus)) +
+  geom_boxplot()
+```
+
+The values for physically_active_7d yes/no, are very similar, although "yes" has a slightly higher median value.  We generally would expect that those who exercise less have higher weights, but this is not the case, as shown by the median values. 
+
+
+```{r}
+x_summary <- x %>% 
+  group_by(physical_3plus) %>% 
+  summarise(mean_weight = mean(weight, na.rm = TRUE), 
+            count = n())
+```
+
+
+Exercise 4
+
+Are all conditions necessary for inference satisfied? Comment on each. You can compute the group sizes with the summarize command above by defining a new variable with the definition n().
+
+There is a large sample size, but we also see several outliers for each response.
+
+
+Exercise 5
+
+Write the hypotheses for testing if the average weights are different for those who exercise at least times a week and those who don’t.
+
+H1: Students who exercise three or more times a week will have a lower average weight than students who exercise less than three times a week.
+
+H0: The weights of students who exercise three or more times a week do not differ from students who exercise less than three times a week. 
+
+```{r}
+obs_diff <- x %>%
+  drop_na(physical_3plus) %>%
+  specify(weight ~ physical_3plus) %>%
+  calculate(stat = "diff in means", order = c("yes", "no"))
+```
+
+```{r}
+null_dist <- x %>%
+  drop_na(physical_3plus) %>%
+  specify(weight ~ physical_3plus) %>%
+  hypothesize(null = "independence") %>%
+  generate(reps = 1000, type = "permute") %>%
+  calculate(stat = "diff in means", order = c("yes", "no"))
+```
+```{r}
+ggplot(data = null_dist, aes(x = stat)) +
+  geom_histogram()
+```
+```{r}
+visualize(null_dist) +
+  shade_p_value(obs_stat = obs_diff, direction = "two_sided")
+```
+
+Exercise 6
+
+How many of these null permutations have a difference of at least obs_stat?
+
+None of the null permutations have a difference of at least obs_stat
+
+Exercise 7
+
+Construct and record a confidence interval for the difference between the weights of those who exercise at least three times a week and those who don’t, and interpret this interval in context of the data.
+
+```{r}
+x %>%
+  drop_na(physical_3plus) %>% 
+  specify(weight ~ physical_3plus) %>%
+  hypothesise(null = "independence") %>% 
+  generate(reps = 1000, type = "permute") %>%
+  calculate(stat = "diff in means", order = c("yes", "no")) %>%
+  get_ci(level = 0.95)
+```
+
+
+The weight difference between students who exercise 3 or more times a week and students who exercise less than three times a week falls within the range of -0.61lbs and 0.63lbs.  Since this range includes 0, we can't say for sure if there is a difference in the average weights between these two groups. 
+
+Exercise 8
+
+Calculate a 95% confidence interval for the average height in meters (height) and interpret it in context.
+
+
+```{r}
+z <- 1.96
+avg_height <- mean(x$height, na.rm = TRUE)
+sd_height <- sd(x$height, na.rm = TRUE)
+n_height <- x %>% 
+  summarise(freq = table(height)) %>% 
+  summarise(n = sum(freq, na.rm = TRUE))
+
+upper_ci <- avg_height + z*(sd_height/sqrt(n_height))
+lower_ci <- avg_height - z*(sd_height/sqrt(n_height))
+```
+
+```{r}
+print(lower_ci)
+```
+```{r}
+print(upper_ci)
+```
+
+at 95% confidence, the average height of students should fall between 1.6894 and 1.6930
+
+Exercise 9
+
+Calculate a new confidence interval for the same parameter at the 90% confidence level. Comment on the width of this interval versus the one obtained in the previous exercise.
+
+
+```{r}
+z <- 1.645
+avg_height <- mean(x$height, na.rm = TRUE)
+sd_height <- sd(x$height, na.rm = TRUE)
+n_height <- x %>% 
+  summarise(freq = table(height)) %>% 
+  summarise(n = sum(freq, na.rm = TRUE))
+
+upper_ci <- avg_height + z*(sd_height/sqrt(n_height))
+lower_ci <- avg_height - z*(sd_height/sqrt(n_height))
+```
+
+```{r}
+print(lower_ci)
+```
+```{r}
+print(upper_ci)
+```
+
+The 90% CI has a slightly more narrow width with a lower CI or 1.6897 and an upper CI of 1.6927 vs 1.6894 and 1.6930 at a 95% CI.
+
+
+Exercise 10
+
+Conduct a hypothesis test evaluating whether the average height is different for those who exercise at least three times a week and those who don’t.
+
+H1: Students who work out three or more times a week may have an average height that differs from those who do not.
+H0: The work out frequency does not impact a student's height.
+
+```{r}
+obs_diff_height <- x %>%
+  drop_na(physical_3plus) %>%
+  specify(height ~ physical_3plus) %>%
+  calculate(stat = "diff in means", order = c("yes", "no"))
+```
+
+
+```{r}
+nulldist_height <- x %>%
+  drop_na(physical_3plus) %>% 
+  specify(height ~ physical_3plus) %>%
+  hypothesise(null = "independence") %>% 
+  generate(reps = 1000, type = "permute") %>%
+  calculate(stat = "diff in means", order = c("yes", "no"))
+
+print(nulldist_height)
+```
+```{r}
+ggplot(data = nulldist_height, aes(x = stat)) +
+  geom_histogram()
+```
+
+```{r}
+visualize(nulldist_height) +
+  shade_p_value(obs_stat = obs_diff_height, direction = "two_sided")
+```
+```{r}
+nulldist_height %>%
+  get_p_value(obs_stat = obs_diff_height, direction = "two_sided")
+```
+ 
+Because the p value is below .05, we can reject the null hypothesis. 
+ 
+
+Exercise 11
+
+Now, a non-inference task: Determine the number of different options there are in the dataset for the hours_tv_per_school_day there are.
+
+```{r}
+table(x$hours_tv_per_school_day)
+```
+There are 7 options
+
+
+Exercise 12
+
+Come up with a research question evaluating the relationship between height or weight and sleep. Formulate the question in a way that it can be answered using a hypothesis test and/or a confidence interval. Report the statistical results, and also provide an explanation in plain language. Be sure to check all assumptions, state your [p-value] level, and conclude in context
+ 
+H0: The amount of sleep a student gets does not have an impact on the student's averge weight.
+H1: students who get five or more hours of sleep per school night will have a lower average weight than students who get less than five hours of sleep a night.
+
+```{r}
+x <- x %>% 
+  mutate(sleep_adjusted = case_when(
+    school_night_hours_sleep == "<5" ~ "4", 
+    school_night_hours_sleep %in% c("5", "6", "7", "8", "9") | grepl("^10+", school_night_hours_sleep) ~ "5",
+    TRUE ~ school_night_hours_sleep
+  )) %>% 
+  mutate(sleep_5plus = ifelse(as.numeric(sleep_adjusted) > 4, "yes", "no"))
+```
+
+
+```{r}
+obs_diff_sleep <- x %>%
+  drop_na(sleep_5plus) %>%
+  specify(weight ~ sleep_5plus) %>%
+  calculate(stat = "diff in means", order = c("yes", "no"))
+```
+
+```{r}
+nulldist_sleep5 <- x %>%
+  drop_na(sleep_5plus) %>% 
+  specify(weight ~ sleep_5plus) %>%
+  hypothesise(null = "independence") %>% 
+  generate(reps = 1000, type = "permute") %>%
+  calculate(stat = "diff in means", order = c("yes", "no"))
+
+print(nulldist_sleep5)
+```
+
+```{r}
+ggplot(data = nulldist_sleep5, aes(x = stat)) +
+  geom_histogram()
+```
+
+```{r}
+visualize(nulldist_sleep5) +
+  shade_p_value(obs_stat = obs_diff_sleep, direction = "two_sided")
+```
+
+```{r}
+nulldist_sleep5 %>%
+  get_p_value(obs_stat = obs_diff_sleep, direction = "two_sided")
+```
+
+
+Because the p-value is below .05, we may reject the null hypothesis. 
+
+
+```{r}
+x %>%
+  drop_na(sleep_5plus) %>% 
+  specify(weight ~ sleep_5plus) %>%
+  hypothesise(null = "independence") %>% 
+  generate(reps = 1000, type = "permute") %>%
+  calculate(stat = "diff in means", order = c("yes", "no")) %>%
+  get_ci(level = 0.95)
+```
+
+
+However, looking at 95% CI, our range holds a value of 0, so it is possible that the average weights of those who sleep 5 or more hours a night aligns with the average weights of students who do not.
+
