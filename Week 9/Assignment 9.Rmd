@@ -1,0 +1,43 @@
+---
+title: "607 Assignment 9"
+author: "Lu Beyer"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+# Overview 
+I am looking to access, read, and store data from the official NYTimes API portal into a usable R dataframe.
+
+```{r}
+library(tidyverse)
+library(jsonlite)
+```
+
+From the NYTimes API portal, I was granted an API key linked to my account.
+```{r}
+key = 'aF3xU5VRcQVibOrgoG12U7RX9SsUs2Nk'
+```
+
+I found an interesting API, a list of historical best selling books.
+```{r}
+url = 'https://api.nytimes.com/svc/books/v3/lists/best-sellers/history.json?api-key='
+```
+
+I used the base url provided by the API portal, adding my key, to create a full url to access the API.
+```{r}
+a <- paste0(url, key)
+```
+
+Using the jsonlite package function fromJSON(), I requested the data from the API, and assigned it to a list.
+```{r}
+b <- fromJSON(a)
+```
+
+I converted the relevant data from the list into a dataframe, which can now be more easily utilized within R.
+```{r}
+c <- as.data.frame(b$results)
+```
+
+# Conclusion
+I found this to be a useful workflow for quickly and easily pulling official data from their source.  While JSON format is typically a bit harder to read, as discussed in previous assignments, their structure allows for easy machine readability, allowing us to work with the data quickly after receiving.  This especially allows for a more streamlined process since APIs seem to be fairly standardized.
