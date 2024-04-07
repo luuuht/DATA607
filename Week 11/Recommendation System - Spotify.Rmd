@@ -1,0 +1,46 @@
+---
+title: "607 Assignment 11"
+author: "Lu Beyer"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+## Introduction
+Your task is to analyze an existing recommender system that you find interesting.  You should:
+Perform a Scenario Design analysis as described below.  Consider whether it makes sense for your selected recommender system to perform scenario design twice, once for the organization (e.g. Amazon.com) and once for the organization's customers.
+
+I am choosing Spotify, an audio streaming service.  Users subscribe for unlimited access to a vast library of music, podcasts, and audiobooks.   
+
+## Scenario Design Analysis:
+
+#### 1.  Who are your target users?
+Spotify's primary target users are their subscribers:  individuals who pay for Spotify access, and curated listening recommendations from Spotify.  Secondary target users may include artists and musicians themselves who contribute their work to the library.    
+
+#### 2.  What are their key goals?
+One subscriber goal may be to discover new music that is similar to music that they already listen to.  One artist goal may be to have as many listeners as they can, growing their fanbase, and generating royalties.
+
+#### 3.  How can you help them accomplish those goals?
+With an effective algorithm, we may be able to help listeners discover new content that they are likely to engage positively with.
+
+
+## Attempt to reverse engineer what you can about the site, from the site interface and any available information that you can find on the Internet or elsewhere.
+
+According to Spotify, a "taste profile" is created for each user.  This is based on listening metadata, including artist, genre, listening session length, track skips, time of day, etc.  They then identify listening trends based on this metadata.  For example: 
+The user tends to listen to podcasts in the morning
+The user tends to listen to high energy contemporary rock in the afternoon
+The user tends to listen to softer 90's acoustic music in the evening 
+
+The algorithm then uses this taste profile to suggest similar, but new, content for the user.  
+
+
+## Include specific recommendations about how to improve the site's recommendation capabilities going forward. 
+
+I would include more explicit user feedback for suggested content.  A lot of algorithmic weighting is based on implicit listening behaviors, such as if the track was skipped or if the track was played more than once, which may not necessarily reflect the user's taste accurately.  I would implement methods that allow users to have more control over the direction of their suggested content.  This may include thumbs up and down feedback for individual tracks, or personalized surveys ask users about their interest in various artists/genres.  Surveys could also ask users about artists or genres that they may want to explore more of, or prompt users to select artists and genres that they may enjoy but might want to listen to more or less, regardless of prior listening trends.  
+
+Implementing stronger weights for user feedback could be especially useful for users who have clear and established preferences, but are relying on the algorithm to suggest new artists in line with what their tastes.  
+
+## References:
+
+https://www.spotify.com/us/safetyandprivacy/understanding-recommendations
+https://www.music-tomorrow.com/blog/how-spotify-recommendation-system-works-a-complete-guide-2022
