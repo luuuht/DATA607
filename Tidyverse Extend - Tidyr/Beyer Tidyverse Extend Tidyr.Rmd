@@ -1,0 +1,76 @@
+---
+title: "DATA 607 Tidyverse Extend - Weyrich"
+author: "Lu Beyer"
+date: "04-17-2024"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+For my Tidyverse Extend, I am going to show some additional Tidyr functions that I have found to be helpful.  
+
+We start that same way Lucas has, by importing our libraries and soccer data
+```{r}
+library(tidyverse)
+library(tidyr)
+
+spi <-  read_csv('https://raw.githubusercontent.com/lucasweyrich958/DATA607/main/spi_matches.csv')
+```
+
+We then filter our large dataset to something more manageable, games only in the year 2022. 
+```{r}
+cl_2022 <-  spi %>%
+    filter(season == 2022)
+
+head(cl_2022, 5)
+```
+We then find a column of interest, importance1
+```{r}
+cl_2022 <- cl_2022 %>% 
+    arrange(desc(importance1))
+```
+We note that all values aren't complete, and we have many NA values.
+```{r}
+
+tail(cl_2022$importance1, 5)
+
+```
+
+One way we may fix this is by ensuring the column is ordered by $importance1, descending.  Then we use Tidyr to fill it downwards.  This takes the last "real" value before the NA values, and applies it to everything until it reaches another valid entry.  Because we arranged the column, it will fill all the NAs until the end of the dataset. 
+```{r}
+a <- cl_2022 %>% 
+    arrange(desc(importance1)) %>% 
+    fill(importance1, .direction = "down")
+
+tail(a$importance1, 5)
+```
+
+If we know what value we want to replace our data with, we can also use Tidyr to replace NA values specifically with replace_na().  In this case, we'll use the average value of $importance2
+```{r}
+a <- a %>% 
+    arrange(desc(importance2)) %>% 
+    mutate(importance2 = replace_na(importance2, mean(importance2, na.rm = TRUE)))
+```
+
+Since we did not rearrange the data after filling, we can see that all of the former NA values were replaced with the average value, 32.122.
+```{r}
+tail(a$importance2, 5)
+```
+
+Another interesting Tidyr function involves nesting.  First we will narrow down the relevant field for easier viewing. 
+```{r}
+b <- a %>% 
+    select(date, league, team1, team2, score1, score2)
+
+head(b, 5)
+```
+
+We can then group our data specifically by league, and the nest all of the data according to their respective league.
+```{r}
+b <- b %>% 
+    group_by(league) %>% 
+    nest()
+
+head(b, 5)
+```
+Nesting our data can allow us to analyze our individual nests separately or export our data to separate files a bit easier.
