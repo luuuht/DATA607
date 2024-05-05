@@ -1,0 +1,174 @@
+---
+title: "FRPL - 607 Final"
+author: "Lu Beyer"
+date: "5/5/2024"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+# Introduction
+According to Schwartz & Rothbart (2019) school lunches improve learning outcomes for students, while missing meals worsens outcomes
+
+FRPL program is a social program that helps provide free school lunches to qualified children.  Used to ensure that children who may not be able to afford school lunches are provided meals regardless.
+
+I'm interested in this topic because all students deserve free lunch.  With consistent threats to social funding programs, it is important to know who will be most impacted.  We can use these sources to see who is using these programs, and have more insight to who is most at risk of food insecurity following funding cuts.
+
+### Loading and cleaning the data
+```{r}
+library(tidyverse)
+library(openxlsx)
+
+frpl_demographics_22 <-  read.csv("frpl_demographics_2022.csv")
+
+demographics <- frpl_demographics_22 %>%
+  select(1, 9:13) %>%
+  rename(Category = 1,
+         `0 to 25%`= 2,
+         `25 to 50%`= 3,
+         `50 to 75%`= 4,
+         `75 to 100%`= 5,
+         `Missing/School Does Not Participate`= 6) %>% 
+  mutate(across(where(is.character), ~str_replace_all(., "Â", ""))) %>% 
+  mutate(Category = str_trim(Category)) 
+```
+
+
+### Organizing the data by demographic
+```{r}
+
+general <- demographics %>% 
+    slice(1:8)
+
+general_long <-  general %>% 
+  pivot_longer(cols = -Category, names_to = "Percent Range", values_to = "Value") %>% 
+  filter(!Category == "Total",
+         !`Percent Range` == "Missing/School Does Not Participate")
+
+ggplot(general_long, aes(x = Category, y = Value, fill = `Percent Range`)) +
+  geom_bar(stat = "identity", position = "dodge")+
+  labs(title = "Percentage of Students Eligible for FRPL by Race")+
+  theme_minimal()+
+  coord_flip()
+```
+### Creating smaller dataframes of different demographics
+```{r}
+elementary <- demographics %>% 
+  slice(10:17)
+
+middle <- demographics %>% 
+  slice(18:25)
+
+high <- demographics %>% 
+  slice(26:33)
+
+city <- demographics %>% 
+  slice(35:42)
+
+suburb <- demographics %>% 
+  slice(43:50)
+
+town <- demographics %>% 
+  slice(51:58)
+
+rural <- demographics %>% 
+  slice(59:66)
+
+schools <- demographics %>% 
+  slice(1,10,18,26)
+```
+
+### Pivoting the data for visualization
+```{r}
+schools_long <-  schools %>% 
+  pivot_longer(cols = -Category, names_to = "Percent Range", values_to = "Value")
+
+ggplot(schools_long, aes(x = `Percent Range`, y = Value, fill = Category)) +
+  geom_bar(stat = "identity", position = "dodge")+
+  labs(title = "Percentage of Students Eligible for FRPL by School Level")+
+  coord_flip()
+```
+
+
+### Extracting, subsetting, and visualizing by highest eligibility rates per school level
+```{r}
+elementary_race <- elementary %>% 
+  mutate(Level = "Elementary") %>% 
+  slice(-1)
+
+middle_race <- middle %>% 
+  mutate(Level = "Middle") %>% 
+  slice(-1)
+
+high_race <- high %>% 
+  mutate(Level = "High") %>% 
+  slice(-1)
+
+school_levels <- bind_rows(elementary_race, middle_race, high_race)
+
+school_levels$Level <- factor(school_levels$Level, levels = c("Elementary", "Middle", "High"))
+
+ggplot(data = school_levels, aes(x = Category, y = `75 to 100%`, fill = Level)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Distribution of Students in Schools Where FRPL Eligibility between 75 - 100%, By Race and School Level")+
+  theme_minimal()+
+  coord_flip()
+```
+
+### Viewing highest eligibility category by Race
+```{r}
+ggplot(data = school_levels, aes(x = Category, y = `75 to 100%`, fill = Level)) +
+  geom_bar(stat = "identity", position = "dodge")+
+  coord_flip()
+```
+
+
+
+### Incorpoating and cleaning HSNY Data
+```{r}
+ny_data <- read_delim("breakfast_2018_19.txt", delim = "\t", trim_ws = TRUE)
+
+ny_data$`Qualified for F/RP %` <- as.numeric(ny_data$`Qualified for F/RP %`)
+
+county <- ny_data %>% 
+  group_by(County) %>% 
+  summarise(Count_Enrolled = sum(Enrollment, na.rm = TRUE),
+            Count_Qualified = sum(`Qualified for F/RP #`), na.rm = TRUE) %>% 
+  select(-na.rm) %>% 
+  mutate(Percentage = Count_Qualified / Count_Enrolled) %>% 
+  arrange(desc(Percentage))
+```
+
+### Ranking counties by Eligibility
+```{r}
+county_top5 <- county %>% head(5)
+county_bot5 <- county %>% tail(5)  
+count_topbottom <- bind_rows(county_top5, county_bot5)
+
+count_topbottom <- count_topbottom %>%
+  mutate(County = factor(County, levels = count_topbottom %>% 
+                           arrange((Percentage)) %>% 
+                           pull(County)))
+
+ggplot(data = count_topbottom, aes(x = County , y = Percentage))+
+  geom_bar(stat = "identity", position = "dodge")+
+  labs(title = "Top and Bottom 5 NY Counties by Student FRPL Eligibility Percentage")+
+  theme_minimal()+
+  coord_flip()
+```
+
+
+# Conclusion
+
+Elementary school aged children have the highest rates of eligibility for FRPL across all racial demographics and have the highest risk of food insecurity if these programs are cut.
+
+Black, Hispanic, and American Indian/Alaskan Native students have the highest rates of eligibility for FRPL and have the highest risk of food insecurity across racial demographics if these programs are cut
+
+
+# References
+
+Hunger Solutions New York. (2019). NYS School Breakfast Program district level data: 2018-2019 school year [Data set]. Retrieved from https://hungersolutionsny.org/federal-nutrition-programs/school-meals/school-breakfast-program-district-level-data/
+
+Schwartz, A. E., & Rothbart, M. W. (2019). Let them eat lunch: The impact of universal free meals on student performance. Center for Policy Research, Maxwell School, Syracuse University. (Original work published December 2017). Retrieved from https://www.maxwell.syr.edu/docs/default-source/research/cpr/working-papers/wp-203-let-them-eat-lunch.pdf?sfvrsn=efae783d_8#:~:text=Results%20indicate%20that%20increases%20in,0.07%20standard%20deviations%20in%
+
+U.S. Department of Education, National Center for Education Statistics. (2022). Public Elementary/Secondary School Universe Survey, 2021-22; and Education Demographic and Geographic Estimates (EDGE), “Public School File,” 2020-21 [Data set]. https://nces.ed.gov/programs/digest/d22/tables/dt22_216.60.asp
